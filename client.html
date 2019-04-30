@@ -1,0 +1,114 @@
+<html>
+<head>
+ <title>mon client</title>
+ <script src="socket.io.js"></script>
+ <style>
+ *{
+	 font-family:arial,verdana;
+ }
+ #monApplication{
+	display:none;
+ }
+ #zoneMessage{
+	border:2px solid #ccc;
+	background:#eee;
+	padding:20px;
+ }
+ .serveur{
+	 color:#444;
+	 font-style:italic;
+ }
+ </style>
+</head>
+<body>
+
+<script>
+var tMessage=Array();	
+	
+var socket = io('http://localhost:8080');
+
+socket.on('message',function(data){
+ console.log(data);
+ 
+ tMessage.push( data );
+ 
+ rafraichirMessages();
+ 
+});
+
+socket.on('demarrerMessagerie',function(data){
+	montrer('monApplication');
+	
+	ecrireHTML('auteur',data.nom);
+	
+	cacher('connexionBouton');
+});
+
+function rafraichirMessages(){
+	
+	var sHtml='';
+	for(var i=tMessage.length;i>0;i--){
+		var auteur=tMessage[(i-1)].sender;
+		var message=tMessage[(i-1)].message;
+		
+		if(auteur=='Serveur'){
+				sHtml+='<p class="serveur">'+message+'</p>';
+		}else{
+				sHtml+='<p><strong>'+auteur+'</strong>: '+message+'</p>';
+		}
+		
+	}
+	
+	ecrireHTML('zoneMessage',sHtml);
+}
+
+function ecrireHTML(id_,html_){
+		
+	var monElement=document.getElementById(id_);
+	if(monElement){
+		monElement.innerHTML=html_;
+	} 
+}
+function montrer(id_){
+	var monElement=document.getElementById(id_);
+	if(monElement){
+		monElement.style.display='block';
+	} 
+}
+function cacher(id_){
+	var monElement=document.getElementById(id_);
+	if(monElement){
+		monElement.style.display='none';
+	} 
+}
+  
+function seConnecter(){
+	var monNom=prompt('Votre nom');
+	if(monNom){	  
+		socket.emit('demanderConnexion',{nom:monNom} );
+	}
+}
+
+
+function askMessage(){
+ var myMessage=prompt('Votre message');
+
+ if(myMessage){
+  socket.emit('message',{message:myMessage});
+ }
+}
+</script>
+
+<div id="monApplication">
+ <div id="zoneMessage">
+ </div>
+
+ <strong id="auteur"></strong> <input id="sendButton" type="button" value="Message!" onclick="askMessage()"/>
+</div>
+
+<input id="connexionBouton" type="button" value="Se connecter" onclick="seConnecter()"/>
+
+
+</body>
+
+</html>
