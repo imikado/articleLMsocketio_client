@@ -1,6 +1,6 @@
 <html>
 <head>
- <title>mon client</title>
+ <title>Mon client</title>
  <script src="socket.io.js"></script>
  <style>
  *{
@@ -23,14 +23,13 @@
 <body>
 
 <script>
-var tMessage=Array();	
+var tableauDesMessages=Array();	
 	
 var socket = io('http://localhost:8080');
 
-socket.on('message',function(data){
- console.log(data);
+socket.on('message',function(messageRecuDuServeur){
  
- tMessage.push( data );
+ tableauDesMessages.push( messageRecuDuServeur );
  
  rafraichirMessages();
  
@@ -47,14 +46,14 @@ socket.on('demarrerMessagerie',function(data){
 function rafraichirMessages(){
 	
 	var sHtml='';
-	for(var i=tMessage.length;i>0;i--){
-		var auteur=tMessage[(i-1)].sender;
-		var message=tMessage[(i-1)].message;
+	for(var i=tableauDesMessages.length;i>0;i--){
+		var auteurDuMessage=tableauDesMessages[(i-1)].auteur;
+		var message=tableauDesMessages[(i-1)].message;
 		
-		if(auteur=='Serveur'){
+		if(auteurDuMessage=='Serveur'){
 				sHtml+='<p class="serveur">'+message+'</p>';
 		}else{
-				sHtml+='<p><strong>'+auteur+'</strong>: '+message+'</p>';
+				sHtml+='<p><strong>'+auteurDuMessage+'</strong>: '+message+'</p>';
 		}
 		
 	}
