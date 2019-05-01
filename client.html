@@ -3,111 +3,115 @@
  <title>Mon client</title>
  <script src="socket.io.js"></script>
  <style>
- *{
-	 font-family:arial,verdana;
- }
- #monApplication{
-	display:none;
- }
- #zoneMessage{
-	border:2px solid #ccc;
-	background:#eee;
-	padding:20px;
- }
- .serveur{
-	 color:#444;
-	 font-style:italic;
- }
+ *{font-family:arial,verdana;}
+ #monApplication{display:none;}
+ #zoneMessage{border:2px solid #ccc;background:#eee;padding:20px;
+height:400px;overflow-y:scroll;}
+ .serveur{color:#444;font-style:italic;}
  </style>
 </head>
 <body>
+	<script>
+	var tableauDesMessages=Array();	
 
-<script>
-var tableauDesMessages=Array();	
-	
-var socket = io('http://localhost:8080');
+	//on connecte notre client au serveur socket.io sur le port 8080	
+	var socket = io('http://localhost:8080');
 
-socket.on('message',function(messageRecuDuServeur){
- 
- tableauDesMessages.push( messageRecuDuServeur );
- 
- rafraichirMessages();
- 
-});
+	//on parametre simplement le code a executer sur l'evenement de demarrage
+	socket.on('demarrerMessagerie',function(messageRecu){
+		montrer('monApplication');
+		ecrireHTML('auteur',messageRecu.nom);
+		cacher('connexionBouton');
+		mettreFocusSur('champMessage');
+	});
 
-socket.on('demarrerMessagerie',function(data){
-	montrer('monApplication');
-	
-	ecrireHTML('auteur',data.nom);
-	
-	cacher('connexionBouton');
-});
+	//idem l'evenement message
+	socket.on('message',function(messageRecuDuServeur){
+		//on ajoute le nouveau message recu
+		tableauDesMessages.push( messageRecuDuServeur );
+		rafraichirMessages();
+	});
 
-function rafraichirMessages(){
-	
-	var sHtml='';
-	for(var i=tableauDesMessages.length;i>0;i--){
-		var auteurDuMessage=tableauDesMessages[(i-1)].auteur;
-		var message=tableauDesMessages[(i-1)].message;
+	function rafraichirMessages(){
+		var htmlAafficher='';
 		
-		if(auteurDuMessage=='Serveur'){
-				sHtml+='<p class="serveur">'+message+'</p>';
-		}else{
-				sHtml+='<p><strong>'+auteurDuMessage+'</strong>: '+message+'</p>';
+		//on lit le tableau des messages a l'envers pour avoir les plus recent en haut
+		for(var i=tableauDesMessages.length;i>0;i--){
+			var auteurDuMessage=tableauDesMessages[(i-1)].auteur;
+			var message=tableauDesMessages[(i-1)].message;
+			
+			if(auteurDuMessage=='Serveur'){
+					htmlAafficher+='<p class="serveur">'+message+'</p>';
+			}else{
+					htmlAafficher+='<p><strong>'+auteurDuMessage+'</strong>: '+message+'</p>';
+			}
 		}
 		
+		ecrireHTML('zoneMessage',htmlAafficher);
 	}
-	
-	ecrireHTML('zoneMessage',sHtml);
-}
-
-function ecrireHTML(id_,html_){
-		
-	var monElement=document.getElementById(id_);
-	if(monElement){
-		monElement.innerHTML=html_;
-	} 
-}
-function montrer(id_){
-	var monElement=document.getElementById(id_);
-	if(monElement){
-		monElement.style.display='block';
-	} 
-}
-function cacher(id_){
-	var monElement=document.getElementById(id_);
-	if(monElement){
-		monElement.style.display='none';
-	} 
-}
-  
-function seConnecter(){
-	var monNom=prompt('Votre nom');
-	if(monNom){	  
-		socket.emit('demanderConnexion',{nom:monNom} );
+	  
+	function seConnecter(){
+		var monNomSaisi=prompt('Votre nom ?');
+		if(monNomSaisi){	  
+			socket.emit('demanderConnexion',{nom:monNomSaisi} );
+		}
 	}
-}
 
+	function envoyerMessage(){
+		var monMessage=recupererValeurChampEtEffacer('champMessage');
 
-function askMessage(){
- var myMessage=prompt('Votre message');
+		if(monMessage){
+			socket.emit('message',{message:monMessage});
+		}
+	}
 
- if(myMessage){
-  socket.emit('message',{message:myMessage});
- }
-}
-</script>
+	//outils
+	function ecrireHTML(id_,htmlAafficher_){
+		var monElement=document.getElementById(id_);
+		if(monElement){
+			monElement.innerHTML=htmlAafficher_;
+		} 
+	}
+	function montrer(id_){
+		var monElement=document.getElementById(id_);
+		if(monElement){
+			monElement.style.display='block';
+		} 
+	}
+	function cacher(id_){
+		var monElement=document.getElementById(id_);
+		if(monElement){
+			monElement.style.display='none';
+		} 
+	}
+	function recupererValeurChampEtEffacer(id_){
+		var monChamp=document.getElementById(id_);
+		if(monChamp){
+			var valeurDuChamp=monChamp.value;
+			monChamp.value='';
+			return valeurDuChamp;
+		}
+		return null;
+	}
+	function mettreFocusSur(id_){
+		var monChamp=document.getElementById(id_);
+		if(monChamp){
+			return monChamp.focus();
+		}
+	}
+	</script>
 
-<div id="monApplication">
- <div id="zoneMessage">
- </div>
+	<div id="monApplication">
+		<div id="zoneMessage"></div>
 
- <strong id="auteur"></strong> <input id="sendButton" type="button" value="Message!" onclick="askMessage()"/>
-</div>
+		<form onsubmit="envoyerMessage();return false;">
+			<strong id="auteur"></strong> 
+			Message: <input type="text" name="message" id="champMessage" />
+			<input type="submit" value="Envoyer"/>
+		</form>
+	</div>
 
-<input id="connexionBouton" type="button" value="Se connecter" onclick="seConnecter()"/>
-
+	<input id="connexionBouton" type="button" value="Se connecter" onclick="seConnecter()"/>
 
 </body>
-
 </html>
