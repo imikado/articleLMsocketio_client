@@ -1,2 +1,4 @@
-# articleLMsocketio_client
-Article linux magazine socket.io partie client
+# Projet source pour Linux Magazine 230
+## Article: Introduction à socket.io.
+
+Partie client
